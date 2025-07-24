@@ -14,7 +14,188 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      allergies: {
+        Row: {
+          allergy_name: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          allergy_name: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          allergy_name?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "allergies_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      dietary_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          preference_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          preference_name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          preference_name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dietary_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      meals: {
+        Row: {
+          calories: number
+          consumed_at: string
+          created_at: string
+          health_score: number | null
+          id: string
+          name: string
+          rating: number | null
+          restaurant: string | null
+          user_id: string
+        }
+        Insert: {
+          calories: number
+          consumed_at?: string
+          created_at?: string
+          health_score?: number | null
+          id?: string
+          name: string
+          rating?: number | null
+          restaurant?: string | null
+          user_id: string
+        }
+        Update: {
+          calories?: number
+          consumed_at?: string
+          created_at?: string
+          health_score?: number | null
+          id?: string
+          name?: string
+          rating?: number | null
+          restaurant?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      medical_conditions: {
+        Row: {
+          condition_name: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          condition_name: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          condition_name?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_conditions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          activity_level: string | null
+          age: number | null
+          consumed_calories: number | null
+          created_at: string
+          daily_calorie_goal: number | null
+          health_score: number | null
+          height: number | null
+          id: string
+          name: string
+          profile_picture_url: string | null
+          streak: number | null
+          updated_at: string
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          activity_level?: string | null
+          age?: number | null
+          consumed_calories?: number | null
+          created_at?: string
+          daily_calorie_goal?: number | null
+          health_score?: number | null
+          height?: number | null
+          id?: string
+          name: string
+          profile_picture_url?: string | null
+          streak?: number | null
+          updated_at?: string
+          user_id: string
+          weight?: number | null
+        }
+        Update: {
+          activity_level?: string | null
+          age?: number | null
+          consumed_calories?: number | null
+          created_at?: string
+          daily_calorie_goal?: number | null
+          health_score?: number | null
+          height?: number | null
+          id?: string
+          name?: string
+          profile_picture_url?: string | null
+          streak?: number | null
+          updated_at?: string
+          user_id?: string
+          weight?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
