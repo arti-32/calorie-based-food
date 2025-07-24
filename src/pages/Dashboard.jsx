@@ -21,11 +21,10 @@ import {
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserData } from "@/hooks/useUserData";
-import { User as SupabaseUser } from "@supabase/supabase-js";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [user, setUser] = useState(null);
   
   // Get user data from Supabase
   const { profile, conditions, allergies, preferences, recentMeals, loading, error } = useUserData(user);
