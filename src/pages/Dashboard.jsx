@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,27 +19,54 @@ import {
   Zap
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useUserData } from "@/hooks/useUserData";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   
-  // Mock user data
-  const userData = {
-    name: "Sarah Johnson",
-    conditions: ["Diabetes Type 2", "Hypertension"],
-    allergies: ["Peanuts", "Shellfish"],
-    preferences: ["Mediterranean", "Low Carb"],
-    dailyCalories: 1650,
-    consumedCalories: 1250,
-    streak: 12,
-    healthScore: 85
+  // Get user data from Supabase
+  const { profile, conditions, allergies, preferences, recentMeals, loading, error } = useUserData(user);
+
+  // Get current user
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+
+    getCurrentUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Handle logout
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
   };
 
-  const recentMeals = [
-    { name: "Grilled Salmon Salad", calories: 420, rating: 4.5, restaurant: "Healthy Bites", healthScore: 92 },
-    { name: "Quinoa Buddha Bowl", calories: 380, rating: 4.2, restaurant: "Green Garden", healthScore: 88 },
-    { name: "Chicken Avocado Wrap", calories: 450, rating: 4.0, restaurant: "Fresh & Fast", healthScore: 75 }
-  ];
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    navigate("/");
+    return null;
+  }
 
   const recommendations = [
     { 
@@ -66,9 +93,9 @@ const Dashboard = () => {
   ];
 
   const achievements = [
-    { name: "Health Streak", value: `${userData.streak} days`, icon: <Zap className="h-5 w-5" /> },
-    { name: "Meals Rated", value: "47", icon: <Star className="h-5 w-5" /> },
-    { name: "Health Score", value: `${userData.healthScore}%`, icon: <Heart className="h-5 w-5" /> }
+    { name: "Health Streak", value: `${profile?.streak || 0} days`, icon: <Zap className="h-5 w-5" /> },
+    { name: "Meals Rated", value: recentMeals.length.toString(), icon: <Star className="h-5 w-5" /> },
+    { name: "Health Score", value: `${profile?.health_score || 0}%`, icon: <Heart className="h-5 w-5" /> }
   ];
 
   return (
@@ -89,7 +116,7 @@ const Dashboard = () => {
               <User className="h-4 w-4 mr-2" />
               Profile
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/")}>
+            <Button variant="ghost" onClick={handleLogout}>
               Logout
             </Button>
           </div>
@@ -100,7 +127,7 @@ const Dashboard = () => {
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-800 mb-2">
-            Welcome back, {userData.name}! 👋
+            Welcome back, {profile?.name || 'User'}! 👋
           </h2>
           <p className="text-gray-600">
             Ready to make healthier food choices today?
@@ -116,14 +143,14 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">
-                {userData.consumedCalories}/{userData.dailyCalories}
+                {profile?.consumed_calories || 0}/{profile?.daily_calorie_goal || 2000}
               </div>
               <Progress 
-                value={(userData.consumedCalories / userData.dailyCalories) * 100} 
+                value={((profile?.consumed_calories || 0) / (profile?.daily_calorie_goal || 2000)) * 100} 
                 className="mt-2"
               />
               <p className="text-xs text-gray-600 mt-1">
-                {userData.dailyCalories - userData.consumedCalories} calories remaining
+                {(profile?.daily_calorie_goal || 2000) - (profile?.consumed_calories || 0)} calories remaining
               </p>
             </CardContent>
           </Card>
@@ -176,31 +203,37 @@ const Dashboard = () => {
               <div>
                 <h4 className="font-medium mb-2">Medical Conditions</h4>
                 <div className="flex flex-wrap gap-2">
-                  {userData.conditions.map((condition) => (
+                  {conditions.length > 0 ? conditions.map((condition) => (
                     <Badge key={condition} className="bg-red-100 text-red-700">
                       {condition}
                     </Badge>
-                  ))}
+                  )) : (
+                    <p className="text-sm text-gray-500">No conditions added</p>
+                  )}
                 </div>
               </div>
               <div>
                 <h4 className="font-medium mb-2">Allergies</h4>
                 <div className="flex flex-wrap gap-2">
-                  {userData.allergies.map((allergy) => (
+                  {allergies.length > 0 ? allergies.map((allergy) => (
                     <Badge key={allergy} className="bg-orange-100 text-orange-700">
                       {allergy}
                     </Badge>
-                  ))}
+                  )) : (
+                    <p className="text-sm text-gray-500">No allergies added</p>
+                  )}
                 </div>
               </div>
               <div>
                 <h4 className="font-medium mb-2">Dietary Preferences</h4>
                 <div className="flex flex-wrap gap-2">
-                  {userData.preferences.map((preference) => (
+                  {preferences.length > 0 ? preferences.map((preference) => (
                     <Badge key={preference} className="bg-green-100 text-green-700">
                       {preference}
                     </Badge>
-                  ))}
+                  )) : (
+                    <p className="text-sm text-gray-500">No preferences added</p>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -223,7 +256,7 @@ const Dashboard = () => {
                       <div className="flex items-center space-x-2 mt-1">
                         <Badge variant="secondary">{meal.calories} cal</Badge>
                         <Badge className="bg-green-100 text-green-700">
-                          Health: {meal.healthScore}%
+                          Health: {meal.health_score || 0}%
                         </Badge>
                       </div>
                     </div>
